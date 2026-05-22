@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: teams-api
+  namespace: platform-system
+  annotations:
+    # Match the ClusterIssuer name you created in Step 1.
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: ["teams-api.spectraidp.com"]
+      secretName: teams-api-tls
+  rules:
+    - host: teams-api.spectraidp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: teams-api
+                port:
+                  number: 80

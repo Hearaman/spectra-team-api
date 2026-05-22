@@ -1,0 +1,13 @@
+# dependencies & build output
+node_modules/
+dist/
+*.log
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# local env / real secrets — never commit these
+.env
+*.local.yaml

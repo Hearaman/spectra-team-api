@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teams-api
+  namespace: platform-system
+  labels:
+    app: teams-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teams-api
+  template:
+    metadata:
+      labels:
+        app: teams-api
+    spec:
+      containers:
+        - name: teams-api
+          # Replace with your pushed image (see README "Step B").
+          image: ghcr.io/YOUR_GH_USERNAME/teams-api:0.1.0
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: teams-api-secret
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: { cpu: "50m", memory: "64Mi" }
+            limits:   { cpu: "250m", memory: "256Mi" }
