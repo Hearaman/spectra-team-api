@@ -1,7 +1,8 @@
+import "dotenv/config";
 import express from "express";
 import { migrate, pool } from "./db";
 import { requireToken } from "./auth";
-import { listTeams, getTeam, createTeam, updateTeam, deleteTeam } from "./teams";
+import { listTeams, getTeam, createTeam, updateTeam, deleteTeam, setProvisionStatus } from "./teams";
 import { startSyncLoop } from "./events";
 
 const app = express();
@@ -51,6 +52,20 @@ app.post("/v1/teams", async (req, res) => {
 
 app.patch("/v1/teams/:slug", async (req, res) => {
   const team = await updateTeam(req.params.slug, req.body || {});
+  if (!team) return res.status(404).json({ error: "not found" });
+  res.json(team);
+});
+
+// ---------- Provisioning status: written back by the namespace-controller ----
+// The control plane reports here after it reconciles a team into the cluster,
+// so GET /v1/teams/:slug reflects what was *actually* provisioned (not just the
+// desired state). Status-only; does not emit an event (avoids a reconcile loop).
+app.put("/v1/teams/:slug/status", async (req, res) => {
+  const { status } = req.body || {};
+  if (!status) {
+    return res.status(400).json({ error: "status is required" });
+  }
+  const team = await setProvisionStatus(req.params.slug, req.body);
   if (!team) return res.status(404).json({ error: "not found" });
   res.json(team);
 });

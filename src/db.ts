@@ -23,6 +23,21 @@ CREATE TABLE IF NOT EXISTS teams (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Provisioning status, written back by the namespace-controller after it
+-- reconciles a team into the cluster. The 'status' column above is the team's
+-- *desired* lifecycle state (active/offboarded); these columns report what the
+-- control plane has *actually* provisioned, so the portal can show the truth.
+--   provision_status     -> 'pending' until the controller first reports;
+--                           then 'provisioned' | 'error' | 'offboarded'.
+--   provisioned_resources-> the concrete namespaces/quotas/rolebindings that exist.
+--   provision_message    -> last error detail, if any.
+--   last_reconciled_at   -> when the controller last reported, for staleness.
+-- ADD COLUMN IF NOT EXISTS keeps this migration safe on an existing table.
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS provision_status      TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS provisioned_resources JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS provision_message     TEXT;
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS last_reconciled_at    TIMESTAMPTZ;
+
 CREATE TABLE IF NOT EXISTS team_events (
   id          BIGSERIAL PRIMARY KEY,
   event_type  TEXT NOT NULL,

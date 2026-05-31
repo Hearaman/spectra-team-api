@@ -5,7 +5,7 @@ metadata:
   namespace: platform-system
   annotations:
     # Match the ClusterIssuer name you created in Step 1.
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
 spec:
   ingressClassName: nginx
   tls:

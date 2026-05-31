@@ -87,6 +87,36 @@ export async function updateTeam(slug: string, patch: Partial<TeamInput>) {
   }
 }
 
+// Provisioning report written back by the namespace-controller.
+export interface ProvisionStatusInput {
+  status: string;                 // "provisioned" | "error" | "offboarded"
+  resources?: unknown[];          // [{ kind, name, namespace, environment }, ...]
+  message?: string | null;
+}
+
+// Record what the control plane has actually provisioned for a team. This is a
+// status-only write (it never touches desired-state columns) and does NOT emit
+// an event — otherwise the controller's own report would trigger another
+// reconcile, looping forever. Returns the updated row, or null if unknown slug.
+export async function setProvisionStatus(slug: string, input: ProvisionStatusInput) {
+  const { rows } = await pool.query(
+    `UPDATE teams SET
+       provision_status      = $2,
+       provisioned_resources = $3,
+       provision_message     = $4,
+       last_reconciled_at    = now()
+     WHERE slug = $1
+     RETURNING *`,
+    [
+      slug,
+      input.status,
+      JSON.stringify(input.resources ?? []),
+      input.message ?? null,
+    ]
+  );
+  return rows[0] ?? null;
+}
+
 export async function deleteTeam(slug: string) {
   const client = await pool.connect();
   try {

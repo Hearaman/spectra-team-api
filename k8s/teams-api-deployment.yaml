@@ -18,7 +18,7 @@ spec:
       containers:
         - name: teams-api
           # Replace with your pushed image (see README "Step B").
-          image: ghcr.io/YOUR_GH_USERNAME/teams-api:0.1.0
+          image: ghcr.io/hearaman/spectra-team-api:0.1.0
           ports:
             - containerPort: 8080
           envFrom:
