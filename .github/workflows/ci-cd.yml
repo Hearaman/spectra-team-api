@@ -46,12 +46,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # The image package is user-owned and not linked to this repo's Actions,
+      # so the built-in GITHUB_TOKEN gets 403 on push. Authenticate with a PAT
+      # that has write:packages (GHCR_PAT repo secret).
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: hearaman
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
